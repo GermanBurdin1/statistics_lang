@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Statistic } from './statistic.entity';
 
 @Injectable()
@@ -272,7 +272,7 @@ export class StatisticsService {
     const count = await this.statisticsRepo.count({
       where: { 
         type: 'login',
-        createdAt: { $gte: startOfMonth } as any
+        createdAt: MoreThanOrEqual(startOfMonth)
       }
     });
 
