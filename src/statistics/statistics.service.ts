@@ -133,4 +133,149 @@ export class StatisticsService {
       wordsLearned: learnedWords
     };
   }
+
+  // ==================== ADMIN STATISTICS ====================
+
+  /**
+   * Получить статистику регистрации пользователей по месяцам
+   */
+  async getUserRegistrationStats(month?: string) {
+    try {
+      const currentDate = month ? new Date(month + '-01') : new Date();
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+      console.log(`📊 Получение статистики регистраций с ${startOfMonth.toISOString()} по ${endOfMonth.toISOString()}`);
+
+      // Запрос к auth-service для получения пользователей
+      const response = await fetch(`http://localhost:3001/auth/users/stats?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`);
+      
+      if (!response.ok) {
+        console.error('Ошибка получения статистики пользователей:', response.status);
+        return { newStudents: 0, newTeachers: 0, totalNew: 0 };
+      }
+
+      const data = await response.json();
+      return {
+        newStudents: data.newStudents || 0,
+        newTeachers: data.newTeachers || 0, 
+        totalNew: (data.newStudents || 0) + (data.newTeachers || 0),
+        month: month || currentDate.toISOString().slice(0, 7)
+      };
+    } catch (error) {
+      console.error('Ошибка подключения к auth-service:', error);
+      return { newStudents: 0, newTeachers: 0, totalNew: 0 };
+    }
+  }
+
+  /**
+   * Получить статистику проведенных уроков по месяцам
+   */
+  async getLessonsStats(month?: string) {
+    try {
+      const currentDate = month ? new Date(month + '-01') : new Date();
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+      console.log(`📊 Получение статистики уроков с ${startOfMonth.toISOString()} по ${endOfMonth.toISOString()}`);
+
+      // Запрос к lesson-service для получения статистики уроков
+      const response = await fetch(`http://localhost:3004/lessons/stats?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`);
+      
+      if (!response.ok) {
+        console.error('Ошибка получения статистики уроков:', response.status);
+        return { totalLessons: 0, completedLessons: 0, cancelledLessons: 0 };
+      }
+
+      const data = await response.json();
+      return {
+        totalLessons: data.totalLessons || 0,
+        completedLessons: data.completedLessons || 0,
+        cancelledLessons: data.cancelledLessons || 0,
+        month: month || currentDate.toISOString().slice(0, 7)
+      };
+    } catch (error) {
+      console.error('Ошибка подключения к lesson-service:', error);
+      return { totalLessons: 0, completedLessons: 0, cancelledLessons: 0 };
+    }
+  }
+
+  /**
+   * Получить дополнительную статистику платформы
+   */
+  async getPlatformStats() {
+    try {
+      // Получаем общую активность платформы
+      const [userStats, lessonStats] = await Promise.all([
+        this.getUserRegistrationStats(),
+        this.getLessonsStats()
+      ]);
+
+      // Получаем статистику по словарю
+      const vocabResponse = await fetch('http://localhost:3000/translation/stats');
+      const vocabData = vocabResponse.ok ? await vocabResponse.json() : [];
+
+      // Получаем топ-3 языковых пар для перевода
+      const topLanguagePairs = vocabData.slice(0, 3).map((item: any) => ({
+        pair: `${item.source} → ${item.target}`,
+        count: item.count
+      }));
+
+      return {
+        monthlyUserGrowth: userStats.totalNew,
+        monthlyLessons: lessonStats.totalLessons,
+        topLanguagePairs,
+        platformActivity: {
+          activeUsers: await this.getActiveUsersCount(),
+          totalLogins: await this.getTotalLoginsThisMonth()
+        }
+      };
+    } catch (error) {
+      console.error('Ошибка получения статистики платформы:', error);
+      return {
+        monthlyUserGrowth: 0,
+        monthlyLessons: 0,
+        topLanguagePairs: [],
+        platformActivity: { activeUsers: 0, totalLogins: 0 }
+      };
+    }
+  }
+
+  /**
+   * Получить количество активных пользователей в этом месяце
+   */
+  private async getActiveUsersCount(): Promise<number> {
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    
+    const loginStats = await this.statisticsRepo.find({
+      where: { type: 'login' },
+      order: { createdAt: 'DESC' }
+    });
+
+    // Считаем уникальных пользователей за текущий месяц
+    const uniqueUsers = new Set();
+    loginStats.forEach(stat => {
+      if (stat.createdAt >= startOfMonth) {
+        uniqueUsers.add(stat.userId);
+      }
+    });
+
+    return uniqueUsers.size;
+  }
+
+  /**
+   * Получить общее количество входов в этом месяце
+   */
+  private async getTotalLoginsThisMonth(): Promise<number> {
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    
+    const count = await this.statisticsRepo.count({
+      where: { 
+        type: 'login',
+        createdAt: { $gte: startOfMonth } as any
+      }
+    });
+
+    return count;
+  }
 } 

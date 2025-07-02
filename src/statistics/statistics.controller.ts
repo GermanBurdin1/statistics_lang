@@ -65,4 +65,30 @@ export class StatisticsController {
     const count = await this.statisticsService.getLearnedWordsCount(studentId);
     return { count };
   }
+
+  // ==================== ADMIN ENDPOINTS ====================
+
+  /**
+   * Получить статистику регистрации пользователей по месяцам
+   */
+  @Get('admin/users/:month?')
+  async getUserRegistrationStats(@Param('month') month?: string) {
+    return this.statisticsService.getUserRegistrationStats(month);
+  }
+
+  /**
+   * Получить статистику проведенных уроков по месяцам
+   */
+  @Get('admin/lessons/:month?')
+  async getLessonsStats(@Param('month') month?: string) {
+    return this.statisticsService.getLessonsStats(month);
+  }
+
+  /**
+   * Получить общую статистику платформы
+   */
+  @Get('admin/platform')
+  async getPlatformStats() {
+    return this.statisticsService.getPlatformStats();
+  }
 } 
