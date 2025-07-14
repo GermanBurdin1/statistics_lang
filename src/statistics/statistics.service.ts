@@ -244,7 +244,7 @@ export class StatisticsService {
   /**
    * Получить количество активных пользователей в этом месяце
    */
-  private async getActiveUsersCount(): Promise<number> {
+  public async getActiveUsersCount(): Promise<number> {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     
     const loginStats = await this.statisticsRepo.find({
@@ -266,7 +266,7 @@ export class StatisticsService {
   /**
    * Получить общее количество входов в этом месяце
    */
-  private async getTotalLoginsThisMonth(): Promise<number> {
+  public async getTotalLoginsThisMonth(): Promise<number> {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     
     const count = await this.statisticsRepo.count({
