@@ -14,6 +14,7 @@ export class Statistic {
   @Column('jsonb', { nullable: true })
   data: any;
 
+  // TODO : ajouter un index sur createdAt pour améliorer les performances des requêtes temporelles
   @CreateDateColumn()
   createdAt: Date;
 } 

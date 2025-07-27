@@ -23,102 +23,102 @@ export class StatisticsService {
     return this.statisticsRepo.find();
   }
 
-  // ==================== НОВЫЕ МЕТОДЫ ДЛЯ РЕАЛЬНОЙ СТАТИСТИКИ ====================
+  // ==================== NOUVELLES MÉTHODES POUR STATISTIQUES RÉELLES ====================
   
   /**
-   * Получить количество завершенных уроков для студента
+   * Récupérer le nombre de cours terminés pour un étudiant
    */
   async getCompletedLessonsCount(studentId: string): Promise<number> {
     try {
-      // Делаем запрос к lesson-service
+      // on fait une requête au lesson-service
       const response = await fetch(`http://localhost:3004/lessons/completed/count/${studentId}`);
       if (!response.ok) {
-        console.error('Ошибка получения завершенных уроков:', response.status);
+        console.error('[StatisticsService] Erreur récupération cours terminés:', response.status);
         return 0;
       }
       const data = await response.json();
       return data.count || 0;
     } catch (error) {
-      console.error('Ошибка подключения к lesson-service:', error);
+      console.error('[StatisticsService] Erreur connexion au lesson-service:', error);
       return 0;
     }
   }
 
   /**
-   * Получить количество активных дней (дней когда студент заходил в систему)
+   * Récupérer le nombre de jours actifs (jours où l'étudiant s'est connecté)
    */
   async getActiveDaysCount(userId: string): Promise<number> {
     try {
-      console.log(`📊 [DEBUG] Подсчет активных дней для пользователя: ${userId}`);
+      console.log(`[StatisticsService] Calcul des jours actifs pour utilisateur: ${userId}`);
       
-      // Получаем все статистики пользователя с типом 'login'
+      // on récupère toutes les statistiques de l'utilisateur avec type 'login'
       const loginStats = await this.statisticsRepo.find({
         where: { userId, type: 'login' },
         order: { createdAt: 'DESC' }
       });
 
-      console.log(`📊 [DEBUG] Найдено записей логинов: ${loginStats.length}`);
-      console.log(`📊 [DEBUG] Записи логинов:`, loginStats.map(s => ({ 
+      console.log(`[StatisticsService] Trouvé ${loginStats.length} enregistrements de connexion`);
+      console.log(`[StatisticsService] Enregistrements:`, loginStats.map(s => ({ 
         createdAt: s.createdAt.toISOString(), 
         date: s.createdAt.toISOString().split('T')[0]
       })));
 
-      // Подсчитываем уникальные дни входа
+      // on compte les jours uniques de connexion
       const uniqueDays = new Set();
       loginStats.forEach(stat => {
         const dateOnly = stat.createdAt.toISOString().split('T')[0];
         uniqueDays.add(dateOnly);
       });
 
-      console.log(`📊 [DEBUG] Уникальные дни:`, Array.from(uniqueDays));
-      console.log(`📊 [DEBUG] Количество активных дней: ${uniqueDays.size}`);
+      console.log(`[StatisticsService] Jours uniques:`, Array.from(uniqueDays));
+      console.log(`[StatisticsService] Nombre de jours actifs: ${uniqueDays.size}`);
 
       return uniqueDays.size;
     } catch (error) {
-      console.error('Ошибка получения активных дней:', error);
+      console.error('[StatisticsService] Erreur récupération jours actifs:', error);
       return 0;
     }
   }
 
   /**
-   * Получить количество изученных слов для студента
+   * Récupérer le nombre de mots appris pour un étudiant
    */
   async getLearnedWordsCount(userId: string): Promise<number> {
     try {
-      // Делаем запрос к vocabulary-service
+      // on fait une requête au vocabulary-service
       const response = await fetch(`http://localhost:3000/lexicon/learned/count/${userId}`);
       if (!response.ok) {
-        console.error('Ошибка получения изученных слов:', response.status);
+        console.error('[StatisticsService] Erreur récupération mots appris:', response.status);
         return 0;
       }
       const data = await response.json();
       return data.count || 0;
     } catch (error) {
-      console.error('Ошибка подключения к vocabulary-service:', error);
+      console.error('[StatisticsService] Erreur connexion au vocabulary-service:', error);
       return 0;
     }
   }
 
   /**
-   * Записать активность входа пользователя
+   * Enregistrer l'activité de connexion d'un utilisateur
    */
   async recordUserLogin(userId: string): Promise<void> {
     try {
-      console.log(`📊 [DEBUG] Записываем вход пользователя: ${userId}`);
+      console.log(`[StatisticsService] Enregistrement connexion utilisateur: ${userId}`);
       
       const result = await this.createStatistic(userId, 'login', {
         action: 'user_login',
         timestamp: new Date().toISOString()
       });
       
-      console.log(`📊 [DEBUG] Вход записан успешно:`, result);
+      console.log(`[StatisticsService] Connexion enregistrée avec succès:`, result);
     } catch (error) {
-      console.error('Ошибка записи активности входа:', error);
+      console.error('[StatisticsService] Erreur enregistrement activité connexion:', error);
     }
   }
 
   /**
-   * Получить полную статистику для студента
+   * Récupérer les statistiques complètes pour un étudiant
    */
   async getStudentDashboardStats(studentId: string) {
     const [completedLessons, activeDays, learnedWords] = await Promise.all([
@@ -134,10 +134,10 @@ export class StatisticsService {
     };
   }
 
-  // ==================== ADMIN STATISTICS ====================
+  // ==================== STATISTIQUES ADMIN ====================
 
   /**
-   * Получить статистику регистрации пользователей по месяцам
+   * Récupérer les statistiques d'inscription des utilisateurs par mois
    */
   async getUserRegistrationStats(month?: string) {
     try {
@@ -145,13 +145,13 @@ export class StatisticsService {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-      console.log(`📊 Получение статистики регистраций с ${startOfMonth.toISOString()} по ${endOfMonth.toISOString()}`);
+      console.log(`[StatisticsService] Récupération stats inscriptions du ${startOfMonth.toISOString()} au ${endOfMonth.toISOString()}`);
 
-      // Запрос к auth-service для получения пользователей
+      // requête à l'auth-service pour récupérer les utilisateurs
       const response = await fetch(`http://localhost:3001/auth/users/stats?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`);
       
       if (!response.ok) {
-        console.error('Ошибка получения статистики пользователей:', response.status);
+        console.error('[StatisticsService] Erreur récupération stats utilisateurs:', response.status);
         return { newStudents: 0, newTeachers: 0, totalNew: 0 };
       }
 
@@ -163,13 +163,13 @@ export class StatisticsService {
         month: month || currentDate.toISOString().slice(0, 7)
       };
     } catch (error) {
-      console.error('Ошибка подключения к auth-service:', error);
+      console.error('[StatisticsService] Erreur connexion auth-service:', error);
       return { newStudents: 0, newTeachers: 0, totalNew: 0 };
     }
   }
 
   /**
-   * Получить статистику проведенных уроков по месяцам
+   * Récupérer les statistiques des cours donnés par mois
    */
   async getLessonsStats(month?: string) {
     try {
@@ -177,13 +177,13 @@ export class StatisticsService {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-      console.log(`📊 Получение статистики уроков с ${startOfMonth.toISOString()} по ${endOfMonth.toISOString()}`);
+      console.log(`[StatisticsService] Récupération stats cours du ${startOfMonth.toISOString()} au ${endOfMonth.toISOString()}`);
 
-      // Запрос к lesson-service для получения статистики уроков
+      // requête au lesson-service pour récupérer les stats de cours
       const response = await fetch(`http://localhost:3004/lessons/stats?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`);
       
       if (!response.ok) {
-        console.error('Ошибка получения статистики уроков:', response.status);
+        console.error('[StatisticsService] Erreur récupération stats cours:', response.status);
         return { totalLessons: 0, completedLessons: 0, cancelledLessons: 0 };
       }
 
@@ -195,27 +195,27 @@ export class StatisticsService {
         month: month || currentDate.toISOString().slice(0, 7)
       };
     } catch (error) {
-      console.error('Ошибка подключения к lesson-service:', error);
+      console.error('[StatisticsService] Erreur connexion lesson-service:', error);
       return { totalLessons: 0, completedLessons: 0, cancelledLessons: 0 };
     }
   }
 
   /**
-   * Получить дополнительную статистику платформы
+   * Récupérer les statistiques supplémentaires de la plateforme
    */
   async getPlatformStats() {
     try {
-      // Получаем общую активность платформы
+      // on récupère l'activité générale de la plateforme
       const [userStats, lessonStats] = await Promise.all([
         this.getUserRegistrationStats(),
         this.getLessonsStats()
       ]);
 
-      // Получаем статистику по словарю
+      // on récupère les stats du vocabulaire
       const vocabResponse = await fetch('http://localhost:3000/translation/stats');
       const vocabData = vocabResponse.ok ? await vocabResponse.json() : [];
 
-      // Получаем топ-3 языковых пар для перевода
+      // on récupère le top 3 des paires de langues pour la traduction
       const topLanguagePairs = vocabData.slice(0, 3).map((item: any) => ({
         pair: `${item.source} → ${item.target}`,
         count: item.count
@@ -231,7 +231,8 @@ export class StatisticsService {
         }
       };
     } catch (error) {
-      console.error('Ошибка получения статистики платформы:', error);
+      console.error('[StatisticsService] Erreur récupération stats plateforme:', error);
+      // TODO : implémenter un système de cache pour éviter les appels répétés
       return {
         monthlyUserGrowth: 0,
         monthlyLessons: 0,
@@ -242,7 +243,7 @@ export class StatisticsService {
   }
 
   /**
-   * Получить количество активных пользователей в этом месяце
+   * Récupérer le nombre d'utilisateurs actifs ce mois
    */
   public async getActiveUsersCount(): Promise<number> {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -252,7 +253,7 @@ export class StatisticsService {
       order: { createdAt: 'DESC' }
     });
 
-    // Считаем уникальных пользователей за текущий месяц
+    // on compte les utilisateurs uniques pour le mois actuel
     const uniqueUsers = new Set();
     loginStats.forEach(stat => {
       if (stat.createdAt >= startOfMonth) {
@@ -264,7 +265,7 @@ export class StatisticsService {
   }
 
   /**
-   * Получить общее количество входов в этом месяце
+   * Récupérer le nombre total de connexions ce mois
    */
   public async getTotalLoginsThisMonth(): Promise<number> {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);

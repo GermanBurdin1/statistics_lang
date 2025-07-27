@@ -20,10 +20,10 @@ export class StatisticsController {
     return this.statisticsService.getAllStatistics();
   }
 
-  // ==================== НОВЫЕ ENDPOINTS ДЛЯ РЕАЛЬНОЙ СТАТИСТИКИ ====================
+  // ==================== NOUVEAUX ENDPOINTS POUR STATISTIQUES RÉELLES ====================
   
   /**
-   * Получить полную статистику для студента
+   * Récupérer les statistiques complètes pour un étudiant
    */
   @Get('student/:studentId/dashboard')
   async getStudentDashboardStats(@Param('studentId') studentId: string) {
@@ -31,16 +31,17 @@ export class StatisticsController {
   }
 
   /**
-   * Записать вход пользователя в систему
+   * Enregistrer la connexion d'un utilisateur au système
    */
   @Post('login')
   async recordLogin(@Body() body: { userId: string }) {
     await this.statisticsService.recordUserLogin(body.userId);
+    // TODO : ajouter validation du userId avant enregistrement
     return { success: true };
   }
 
   /**
-   * Получить количество завершенных уроков
+   * Récupérer le nombre de cours terminés
    */
   @Get('student/:studentId/lessons/completed')
   async getCompletedLessons(@Param('studentId') studentId: string) {
@@ -49,7 +50,7 @@ export class StatisticsController {
   }
 
   /**
-   * Получить количество активных дней
+   * Récupérer le nombre de jours actifs
    */
   @Get('student/:studentId/active-days')
   async getActiveDays(@Param('studentId') studentId: string) {
@@ -58,7 +59,7 @@ export class StatisticsController {
   }
 
   /**
-   * Получить количество изученных слов
+   * Récupérer le nombre de mots appris
    */
   @Get('student/:studentId/words/learned')
   async getLearnedWords(@Param('studentId') studentId: string) {
@@ -66,10 +67,10 @@ export class StatisticsController {
     return { count };
   }
 
-  // ==================== ADMIN ENDPOINTS ====================
+  // ==================== ENDPOINTS ADMIN ====================
 
   /**
-   * Получить статистику регистрации пользователей по месяцам
+   * Récupérer les statistiques d'inscription des utilisateurs par mois
    */
   @Get('admin/users/:month?')
   async getUserRegistrationStats(@Param('month') month?: string) {
@@ -77,7 +78,7 @@ export class StatisticsController {
   }
 
   /**
-   * Получить статистику проведенных уроков по месяцам
+   * Récupérer les statistiques des cours donnés par mois
    */
   @Get('admin/lessons/:month?')
   async getLessonsStats(@Param('month') month?: string) {
@@ -85,10 +86,11 @@ export class StatisticsController {
   }
 
   /**
-   * Получить общую статистику платформы
+   * Récupérer les statistiques générales de la plateforme
    */
   @Get('admin/platform')
   async getPlatformStats() {
+    // TODO : ajouter une authentification admin pour cet endpoint
     return this.statisticsService.getPlatformStats();
   }
 } 

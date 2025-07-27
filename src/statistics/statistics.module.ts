@@ -8,5 +8,7 @@ import { StatisticsController } from './statistics.controller';
   imports: [TypeOrmModule.forFeature([Statistic])],
   providers: [StatisticsService],
   controllers: [StatisticsController],
+  exports: [StatisticsService],
+  // TODO : ajouter un module de cache Redis pour améliorer les performances
 })
 export class StatisticsModule {} 

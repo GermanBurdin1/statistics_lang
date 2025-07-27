@@ -22,5 +22,6 @@ import { ConfigModule } from '@nestjs/config';
     }),
     StatisticsModule,
   ],
+  // TODO : ajouter des modules de monitoring et logging centralisé
 })
 export class AppModule {} 

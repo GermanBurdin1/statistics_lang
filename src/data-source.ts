@@ -3,7 +3,7 @@ import { Statistic } from './statistics/statistic.entity';
 import * as dotenv from 'dotenv';
 import { Logger } from '@nestjs/common';
 
-dotenv.config(); // 👈 подгружаем .env
+dotenv.config(); // charge les variables d'environnement
 
 Logger.log(`DB_USER: ${process.env.DB_USERNAME}, DB_PASS: ${process.env.DB_PASSWORD}`, 'DataSource');
 
@@ -17,4 +17,5 @@ export const AppDataSource = new DataSource({
   entities: [Statistic],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
+  // TODO : configurer les paramètres de connexion pour la production
 }); 

@@ -9,6 +9,7 @@ describe('StatisticsService', () => {
   let repo: Repository<Statistic>;
 
   beforeEach(async () => {
+    // setup du module avec mocks pour les statistiques
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StatisticsService,
@@ -48,6 +49,7 @@ describe('StatisticsService', () => {
     (repo.find as jest.Mock).mockResolvedValue([{ id: '1', userId: '123' }]);
     const result = await service.getStatisticsForUser('123');
     expect(result).toHaveLength(1);
+    // TODO : tester avec différents types de statistiques
   });
 
   it('should return all statistics', async () => {
