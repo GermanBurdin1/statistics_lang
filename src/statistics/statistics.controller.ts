@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req } from '@nestjs/common';
 import { StatisticsService } from './statistics.service';
 
 @Controller('statistics')
@@ -6,18 +6,21 @@ export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 
   @Post()
-  async create(@Body() body: { userId: string; type: string; data: any }) {
-    return this.statisticsService.createStatistic(body.userId, body.type, body.data);
+  async create(@Body() body: { type: string; data: any }, @Req() req: any) {
+    const currentUserId = req.user?.sub;
+    return this.statisticsService.createStatistic(currentUserId, body.type, body.data);
   }
 
   @Get('user/:userId')
-  async getForUser(@Param('userId') userId: string) {
-    return this.statisticsService.getStatisticsForUser(userId);
+  async getForUser(@Param('userId') userId: string, @Req() req: any) {
+    const currentUserId = req.user?.sub;
+    return this.statisticsService.getStatisticsForUser(userId, currentUserId);
   }
 
   @Get()
-  async getAll() {
-    return this.statisticsService.getAllStatistics();
+  async getAll(@Req() req: any) {
+    const userId = req.user?.sub;
+    return this.statisticsService.getAllStatistics(userId);
   }
 
   // ==================== НОВЫЕ ENDPOINTS ДЛЯ РЕАЛЬНОЙ СТАТИСТИКИ ====================
@@ -25,44 +28,49 @@ export class StatisticsController {
   /**
    * Получить полную статистику для студента
    */
-  @Get('student/:studentId/dashboard')
-  async getStudentDashboardStats(@Param('studentId') studentId: string) {
-    return this.statisticsService.getStudentDashboardStats(studentId);
+  @Get('student/dashboard')
+  async getStudentDashboardStats(@Req() req: any) {
+    const currentUserId = req.user?.sub;
+    return this.statisticsService.getStudentDashboardStats(currentUserId, currentUserId);
   }
 
   /**
    * Записать вход пользователя в систему
    */
   @Post('login')
-  async recordLogin(@Body() body: { userId: string }) {
-    await this.statisticsService.recordUserLogin(body.userId);
+  async recordLogin(@Req() req: any) {
+    const currentUserId = req.user?.sub;
+    await this.statisticsService.recordUserLogin(currentUserId);
     return { success: true };
   }
 
   /**
    * Получить количество завершенных уроков
    */
-  @Get('student/:studentId/lessons/completed')
-  async getCompletedLessons(@Param('studentId') studentId: string) {
-    const count = await this.statisticsService.getCompletedLessonsCount(studentId);
+  @Get('student/lessons/completed')
+  async getCompletedLessons(@Req() req: any) {
+    const currentUserId = req.user?.sub;
+    const count = await this.statisticsService.getCompletedLessonsCount(currentUserId, currentUserId);
     return { count };
   }
 
   /**
    * Получить количество активных дней
    */
-  @Get('student/:studentId/active-days')
-  async getActiveDays(@Param('studentId') studentId: string) {
-    const count = await this.statisticsService.getActiveDaysCount(studentId);
+  @Get('student/active-days')
+  async getActiveDays(@Req() req: any) {
+    const currentUserId = req.user?.sub;
+    const count = await this.statisticsService.getActiveDaysCount(currentUserId, currentUserId);
     return { count };
   }
 
   /**
    * Получить количество изученных слов
    */
-  @Get('student/:studentId/words/learned')
-  async getLearnedWords(@Param('studentId') studentId: string) {
-    const count = await this.statisticsService.getLearnedWordsCount(studentId);
+  @Get('student/words/learned')
+  async getLearnedWords(@Req() req: any) {
+    const currentUserId = req.user?.sub;
+    const count = await this.statisticsService.getLearnedWordsCount(currentUserId, currentUserId);
     return { count };
   }
 
@@ -72,7 +80,12 @@ export class StatisticsController {
    * Получить статистику регистрации пользователей по месяцам
    */
   @Get('admin/users/:month?')
-  async getUserRegistrationStats(@Param('month') month?: string) {
+  async getUserRegistrationStats(@Req() req: any, @Param('month') month?: string) {
+    const userId = req.user?.sub;
+    // TODO: Добавить проверку роли админа
+    // if (!this.isAdmin(userId)) {
+    //   throw new UnauthorizedException('Admin access required');
+    // }
     return this.statisticsService.getUserRegistrationStats(month);
   }
 
@@ -80,7 +93,12 @@ export class StatisticsController {
    * Получить статистику проведенных уроков по месяцам
    */
   @Get('admin/lessons/:month?')
-  async getLessonsStats(@Param('month') month?: string) {
+  async getLessonsStats(@Req() req: any, @Param('month') month?: string) {
+    const userId = req.user?.sub;
+    // TODO: Добавить проверку роли админа
+    // if (!this.isAdmin(userId)) {
+    //   throw new UnauthorizedException('Admin access required');
+    // }
     return this.statisticsService.getLessonsStats(month);
   }
 
@@ -88,7 +106,12 @@ export class StatisticsController {
    * Получить общую статистику платформы
    */
   @Get('admin/platform')
-  async getPlatformStats() {
+  async getPlatformStats(@Req() req: any) {
+    const userId = req.user?.sub;
+    // TODO: Добавить проверку роли админа
+    // if (!this.isAdmin(userId)) {
+    //   throw new UnauthorizedException('Admin access required');
+    // }
     return this.statisticsService.getPlatformStats();
   }
 } 

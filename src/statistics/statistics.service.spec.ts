@@ -46,13 +46,13 @@ describe('StatisticsService', () => {
 
   it('should return user statistics', async () => {
     (repo.find as jest.Mock).mockResolvedValue([{ id: '1', userId: '123' }]);
-    const result = await service.getStatisticsForUser('123');
+    const result = await service.getStatisticsForUser('123', '123');
     expect(result).toHaveLength(1);
   });
 
   it('should return all statistics', async () => {
     (repo.find as jest.Mock).mockResolvedValue([{ id: '1' }, { id: '2' }]);
-    const result = await service.getAllStatistics();
+    const result = await service.getAllStatistics('admin123');
     expect(result.length).toBe(2);
   });
 
@@ -96,7 +96,7 @@ describe('StatisticsService', () => {
     service.getActiveDaysCount = jest.fn().mockResolvedValue(2);
     service.getLearnedWordsCount = jest.fn().mockResolvedValue(10);
 
-    const result = await service.getStudentDashboardStats('student1');
+    const result = await service.getStudentDashboardStats('student1', 'student1');
     expect(result).toEqual({
       lessonsCompleted: 3,
       daysActive: 2,

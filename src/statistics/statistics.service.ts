@@ -15,12 +15,17 @@ export class StatisticsService {
     return this.statisticsRepo.save(stat);
   }
 
-  async getStatisticsForUser(userId: string) {
+  async getStatisticsForUser(userId: string, currentUserId: string) {
+    // Проверяем, что пользователь запрашивает только свои статистики
+    if (userId !== currentUserId) {
+      throw new Error('Unauthorized: You can only view your own statistics');
+    }
+    
     return this.statisticsRepo.find({ where: { userId } });
   }
 
-  async getAllStatistics() {
-    return this.statisticsRepo.find();
+  async getAllStatistics(userId: string) {
+    return this.statisticsRepo.find({ where: { userId } });
   }
 
   // ==================== НОВЫЕ МЕТОДЫ ДЛЯ РЕАЛЬНОЙ СТАТИСТИКИ ====================
@@ -28,7 +33,11 @@ export class StatisticsService {
   /**
    * Получить количество завершенных уроков для студента
    */
-  async getCompletedLessonsCount(studentId: string): Promise<number> {
+  async getCompletedLessonsCount(studentId: string, currentUserId?: string): Promise<number> {
+    // Проверяем владение, если передан currentUserId
+    if (currentUserId && studentId !== currentUserId) {
+      throw new Error('Unauthorized: You can only view your own statistics');
+    }
     try {
       // Делаем запрос к lesson-service
       const response = await fetch(`http://localhost:3004/lessons/completed/count/${studentId}`);
@@ -47,7 +56,11 @@ export class StatisticsService {
   /**
    * Получить количество активных дней (дней когда студент заходил в систему)
    */
-  async getActiveDaysCount(userId: string): Promise<number> {
+  async getActiveDaysCount(userId: string, currentUserId?: string): Promise<number> {
+    // Проверяем владение, если передан currentUserId
+    if (currentUserId && userId !== currentUserId) {
+      throw new Error('Unauthorized: You can only view your own statistics');
+    }
     try {
       console.log(`📊 [DEBUG] Подсчет активных дней для пользователя: ${userId}`);
       
@@ -83,10 +96,14 @@ export class StatisticsService {
   /**
    * Получить количество изученных слов для студента
    */
-  async getLearnedWordsCount(userId: string): Promise<number> {
+  async getLearnedWordsCount(userId: string, currentUserId?: string): Promise<number> {
+    // Проверяем владение, если передан currentUserId
+    if (currentUserId && userId !== currentUserId) {
+      throw new Error('Unauthorized: You can only view your own statistics');
+    }
     try {
-      // Делаем запрос к vocabulary-service
-      const response = await fetch(`http://localhost:3000/lexicon/learned/count/${userId}`);
+      // Делаем запрос к vocabulary-service через API Gateway
+      const response = await fetch(`http://localhost:3011/vocabulary/lexicon/learned/count`);
       if (!response.ok) {
         console.error('Ошибка получения изученных слов:', response.status);
         return 0;
@@ -120,7 +137,12 @@ export class StatisticsService {
   /**
    * Получить полную статистику для студента
    */
-  async getStudentDashboardStats(studentId: string) {
+  async getStudentDashboardStats(studentId: string, currentUserId: string) {
+    // Проверяем, что пользователь запрашивает только свои статистики
+    if (studentId !== currentUserId) {
+      throw new Error('Unauthorized: You can only view your own statistics');
+    }
+    
     const [completedLessons, activeDays, learnedWords] = await Promise.all([
       this.getCompletedLessonsCount(studentId),
       this.getActiveDaysCount(studentId),

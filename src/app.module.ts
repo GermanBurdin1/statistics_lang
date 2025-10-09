@@ -9,6 +9,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StatisticsModule } from './statistics/statistics.module';
 import { Statistic } from './statistics/statistic.entity';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtStrategy } from './auth/jwt.strategy';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -26,7 +31,22 @@ import { ConfigModule } from '@nestjs/config';
       entities: [Statistic],
       synchronize: true,
     }),
+
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      verifyOptions: {
+        algorithms: ['HS256'],
+        issuer: process.env.JWT_ISS,
+      },
+    }),
+
     StatisticsModule,
+  ],
+  providers: [
+    JwtStrategy,
+    // Делаем guard глобальным для сервиса:
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
 export class AppModule {} 

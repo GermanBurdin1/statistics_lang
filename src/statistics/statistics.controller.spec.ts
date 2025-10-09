@@ -35,69 +35,79 @@ describe('StatisticsController', () => {
   });
 
   it('should create statistic', async () => {
-    const body = { userId: 'user1', type: 'login', data: {} };
-    const result = await controller.create(body);
-    expect(service.createStatistic).toHaveBeenCalledWith(body.userId, body.type, body.data);
+    const body = { type: 'login', data: {} };
+    const mockReq = { user: { sub: 'user1' } };
+    const result = await controller.create(body, mockReq);
+    expect(service.createStatistic).toHaveBeenCalledWith('user1', body.type, body.data);
     expect(result).toEqual({ id: 'stat123' });
   });
 
   it('should get statistics for user', async () => {
-    const result = await controller.getForUser('user1');
-    expect(service.getStatisticsForUser).toHaveBeenCalledWith('user1');
+    const mockReq = { user: { sub: 'user1' } };
+    const result = await controller.getForUser('user1', mockReq);
+    expect(service.getStatisticsForUser).toHaveBeenCalledWith('user1', 'user1');
     expect(result).toEqual([{ id: 'stat1' }]);
   });
 
   it('should get all statistics', async () => {
-    const result = await controller.getAll();
-    expect(service.getAllStatistics).toHaveBeenCalled();
+    const mockReq = { user: { sub: 'admin123' } };
+    const result = await controller.getAll(mockReq);
+    expect(service.getAllStatistics).toHaveBeenCalledWith('admin123');
     expect(result).toEqual([{ id: 'statAll' }]);
   });
 
   it('should get student dashboard stats', async () => {
-    const result = await controller.getStudentDashboardStats('student1');
-    expect(service.getStudentDashboardStats).toHaveBeenCalledWith('student1');
+    const mockReq = { user: { sub: 'student1' } };
+    const result = await controller.getStudentDashboardStats(mockReq);
+    expect(service.getStudentDashboardStats).toHaveBeenCalledWith('student1', 'student1');
     expect(result).toEqual({ lessonsCompleted: 5 });
   });
 
   it('should record user login', async () => {
-    const body = { userId: 'user1' };
-    const result = await controller.recordLogin(body);
-    expect(service.recordUserLogin).toHaveBeenCalledWith(body.userId);
+    const mockReq = { user: { sub: 'user1' } };
+    const result = await controller.recordLogin(mockReq);
+    expect(service.recordUserLogin).toHaveBeenCalledWith('user1');
     expect(result).toEqual({ success: true });
   });
 
   it('should get completed lessons count', async () => {
-    const result = await controller.getCompletedLessons('student1');
-    expect(service.getCompletedLessonsCount).toHaveBeenCalledWith('student1');
+    const mockReq = { user: { sub: 'student1' } };
+    const result = await controller.getCompletedLessons(mockReq);
+    expect(service.getCompletedLessonsCount).toHaveBeenCalledWith('student1', 'student1');
     expect(result).toEqual({ count: 7 });
   });
 
   it('should get active days count', async () => {
-    const result = await controller.getActiveDays('student1');
-    expect(service.getActiveDaysCount).toHaveBeenCalledWith('student1');
+    const mockReq = { user: { sub: 'student1' } };
+    const result = await controller.getActiveDays(mockReq);
+    expect(service.getActiveDaysCount).toHaveBeenCalledWith('student1', 'student1');
     expect(result).toEqual({ count: 10 });
   });
 
   it('should get learned words count', async () => {
-    const result = await controller.getLearnedWords('student1');
-    expect(service.getLearnedWordsCount).toHaveBeenCalledWith('student1');
+    const mockReq = { user: { sub: 'student1' } };
+    const result = await controller.getLearnedWords(mockReq);
+    expect(service.getLearnedWordsCount).toHaveBeenCalledWith('student1', 'student1');
     expect(result).toEqual({ count: 50 });
   });
 
   it('should get user registration stats', async () => {
-    const result = await controller.getUserRegistrationStats('2024-07');
+    const mockReq = { user: { sub: 'admin123' } };
+    const result = await controller.getUserRegistrationStats(mockReq, '2024-07');
     expect(service.getUserRegistrationStats).toHaveBeenCalledWith('2024-07');
     expect(result).toEqual({ users: 100 });
   });
 
   it('should get lessons stats', async () => {
-    const result = await controller.getLessonsStats('2024-07');
+    const mockReq = { user: { sub: 'admin123' } };
+    const result = await controller.getLessonsStats(mockReq, '2024-07');
     expect(service.getLessonsStats).toHaveBeenCalledWith('2024-07');
     expect(result).toEqual({ lessons: 200 });
   });
 
   it('should get platform stats', async () => {
-    const result = await controller.getPlatformStats();
+    const mockReq = { user: { sub: 'admin123' } };
+    const result = await controller.getPlatformStats(mockReq);
     expect(service.getPlatformStats).toHaveBeenCalled();
     expect(result).toEqual({ totalUsers: 500 });
   });
